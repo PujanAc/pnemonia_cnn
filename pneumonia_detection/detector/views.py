@@ -70,11 +70,11 @@ def predict(request):
         image_path = prediction.image.path
         result = predictor.predict(image_path)
 
-        # Update prediction
+
         prediction.predicted_class = result['class']
         prediction.confidence = result['confidence']
 
-        # Only generate Grad-CAM for real models
+    
         gradcam_img = None
         if not result.get('mock', False):
             gradcam_img = generate_gradcam(predictor, image_path, settings.IMAGE_INPUT_SIZE)

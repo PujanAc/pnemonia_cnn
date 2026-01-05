@@ -20,20 +20,18 @@ class Prediction(models.Model):
         ('pneumonia', 'Pneumonia'),
     ]
     
-    # Image and model info
+ 
     image = models.ImageField(upload_to='uploads/%Y/%m/%d/')
     model_used = models.CharField(max_length=20, choices=MODEL_CHOICES)
     
-    # Prediction results
+
     predicted_class = models.CharField(max_length=20, choices=RESULT_CHOICES)
-    confidence = models.FloatField()  # 0-100
-    
-    # Grad-CAM visualization
+    confidence = models.FloatField()  
+
     gradcam_image = models.ImageField(upload_to='gradcam/%Y/%m/%d/', null=True, blank=True)
-    
-    # Metadata
+
     created_at = models.DateTimeField(default=timezone.now)
-    processing_time = models.FloatField(null=True, blank=True)  # seconds
+    processing_time = models.FloatField(null=True, blank=True)
     
     class Meta:
         ordering = ['-created_at']

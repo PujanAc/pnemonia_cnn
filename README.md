@@ -43,27 +43,6 @@ The application allows users to upload chest X-ray images, get predictions, visu
 - SQLite
 - HTML, CSS, Bootstrap
 
----
-
-## 📂 Project Structure
-
-chest_xray/
-│
-├── pneumonia_detection/
-│ ├── detector/
-│ ├── templates/
-│ ├── static/
-│ ├── media/
-│ ├── db.sqlite3
-│ └── manage.py
-│
-├── venv/ # ignored
-├── .gitignore
-└── README.md
-
-
-
----
 
 ## ⚙️ Installation & Setup
 

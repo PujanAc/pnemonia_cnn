@@ -1,0 +1,201 @@
+{% extends 'detector/base.html' %}
+
+{% block title %}Home - Pneumonia AI Detection{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    <i class="fas fa-lungs"></i>
+                    Explainable AI for Pneumonia Detection
+                </h1>
+                <p class="hero-subtitle">
+                    Advanced deep learning models with visual explanations for detecting pneumonia from chest X-ray images
+                </p>
+                <div class="hero-buttons">
+                    <a href="{% url 'detector:select_model' %}" class="btn btn-primary btn-large">
+                        <i class="fas fa-upload"></i> Start Detection
+                    </a>
+                    <a href="{% url 'detector:compare' %}" class="btn btn-secondary btn-large">
+                        <i class="fas fa-balance-scale"></i> Compare Models
+                    </a>
+                </div>
+                {% if total_predictions > 0 %}
+                <div class="stats-badge">
+                    <i class="fas fa-chart-line"></i>
+                    <span>{{ total_predictions }} predictions made</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="hero-image">
+                <div class="xray-showcase">
+                    <i class="fas fa-x-ray"></i>
+                    <div class="pulse-ring"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="features-section">
+    <div class="container">
+        <h2 class="section-title">How It Works</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-upload"></i>
+                </div>
+                <h3>1. Upload X-ray</h3>
+                <p>Upload a chest X-ray image in JPG or PNG format (max 10MB)</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3>2. AI Analysis</h3>
+                <p>Choose between Custom CNN or ResNet-50 for image classification</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <h3>3. Visual Explanation</h3>
+                <p>Grad-CAM heatmaps show which areas influenced the AI's decision</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <h3>4. Get Results</h3>
+                <p>View prediction, confidence score, and explainability visualization</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="models-section">
+    <div class="container">
+        <h2 class="section-title">Available AI Models</h2>
+        <div class="models-grid">
+            <div class="model-card">
+                <div class="model-header">
+                    <i class="fas fa-microchip"></i>
+                    <h3>{{ model_info.custom_cnn.name }}</h3>
+                </div>
+                <div class="model-body">
+                    <p>{{ model_info.custom_cnn.description }}</p>
+                    <div class="model-stats">
+                        <div class="stat">
+                            <span class="stat-label">Accuracy</span>
+                            <span class="stat-value">{{ model_info.custom_cnn.accuracy }}%</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Speed</span>
+                            <span class="stat-value"><i class="fas fa-bolt"></i> Fast</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="model-footer">
+                    <span class="badge badge-success">Lightweight</span>
+                    <span class="badge badge-info">Custom Architecture</span>
+                </div>
+            </div>
+
+            <div class="model-card featured">
+                <div class="featured-badge">
+                    <i class="fas fa-star"></i> Recommended
+                </div>
+                <div class="model-header">
+                    <i class="fas fa-network-wired"></i>
+                    <h3>{{ model_info.resnet50.name }}</h3>
+                </div>
+                <div class="model-body">
+                    <p>{{ model_info.resnet50.description }}</p>
+                    <div class="model-stats">
+                        <div class="stat">
+                            <span class="stat-label">Accuracy</span>
+                            <span class="stat-value">{{ model_info.resnet50.accuracy }}%</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Layers</span>
+                            <span class="stat-value">50</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="model-footer">
+                    <span class="badge badge-primary">High Accuracy</span>
+                    <span class="badge badge-warning">Pre-trained</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="explainability-section">
+    <div class="container">
+        <h2 class="section-title">Explainable AI with Grad-CAM</h2>
+        <div class="explainability-content">
+            <div class="explainability-text">
+                <h3><i class="fas fa-lightbulb"></i> Why Explainability Matters</h3>
+                <p>Medical AI systems must be transparent and trustworthy. Our system uses <strong>Gradient-weighted Class Activation Mapping (Grad-CAM)</strong> to visualize which regions of the X-ray image influenced the AI's decision.</p>
+                
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <strong>Transparency</strong>
+                            <p>See exactly where the AI is looking</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <strong>Trust</strong>
+                            <p>Verify AI decisions match clinical expectations</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <strong>Education</strong>
+                            <p>Learn how deep learning identifies patterns</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="explainability-visual">
+                <div class="gradcam-demo">
+                    <div class="demo-layer original">
+                        <i class="fas fa-x-ray"></i>
+                        <span>Original X-ray</span>
+                    </div>
+                    <div class="demo-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="demo-layer heatmap">
+                        <i class="fas fa-fire"></i>
+                        <span>Grad-CAM Heatmap</span>
+                    </div>
+                    <div class="demo-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="demo-layer overlay">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Overlay Visualization</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2><i class="fas fa-rocket"></i> Ready to Try?</h2>
+            <p>Upload a chest X-ray image and get AI-powered analysis with visual explanations</p>
+            <a href="{% url 'detector:select_model' %}" class="btn btn-primary btn-large">
+                <i class="fas fa-play-circle"></i> Start Now
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

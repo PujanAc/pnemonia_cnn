@@ -1,0 +1,547 @@
+{% extends 'detector/base.html' %}
+
+{% block title %}Compare Models - Pneumonia AI Detection{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-balance-scale"></i> Model Comparison</h1>
+        <p>Compare predictions from both AI models side-by-side</p>
+    </div>
+</div>
+
+<div class="container">
+    {% if not comparison %}
+    <!-- Upload Form for Comparison -->
+    <div class="compare-upload-section">
+        <div class="info-banner">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <h3>Compare Both Models</h3>
+                <p>Upload a single chest X-ray image and see how both the Custom CNN and ResNet-50 models analyze it. Perfect for understanding model differences and building confidence in predictions.</p>
+            </div>
+        </div>
+
+        <div class="upload-card">
+            <form method="post" enctype="multipart/form-data" id="compareForm">
+                {% csrf_token %}
+                
+                <div class="comparison-features">
+                    <div class="feature-item">
+                        <i class="fas fa-check-double"></i>
+                        <div>
+                            <strong>Dual Analysis</strong>
+                            <p>Both models analyze the same image</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-fire"></i>
+                        <div>
+                            <strong>Dual Grad-CAM</strong>
+                            <p>See how each model interprets the image</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-chart-bar"></i>
+                        <div>
+                            <strong>Side-by-Side</strong>
+                            <p>Easy comparison of predictions and confidence</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3>Upload X-ray for Comparison</h3>
+                    <p>Both models will analyze this image</p>
+                    <input type="file" name="image" id="imageInput" accept="image/jpeg,image/png,image/jpg" required>
+                </div>
+
+                <div class="image-preview" id="imagePreview" style="display: none;">
+                    <div class="preview-header">
+                        <h4><i class="fas fa-eye"></i> Image Ready</h4>
+                        <button type="button" class="btn-remove" id="removeImage">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <img id="previewImg" src="" alt="Preview">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-large" id="submitBtn" disabled>
+                        <i class="fas fa-balance-scale"></i> Compare Models
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <!-- Comparison Results -->
+    <div class="comparison-results">
+        <!-- Agreement Banner -->
+        {% if models_agree %}
+        <div class="agreement-banner success">
+            <i class="fas fa-check-circle"></i>
+            <div>
+                <h3>Models Agree</h3>
+                <p>Both models predicted the same class: <strong>{{ comparison.cnn_prediction|title }}</strong></p>
+            </div>
+        </div>
+        {% else %}
+        <div class="agreement-banner warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <h3>Models Disagree</h3>
+                <p>The models produced different predictions. Consider consulting with a medical professional.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Original Image -->
+        <div class="original-image-section">
+            <h3><i class="fas fa-x-ray"></i> Original X-ray Image</h3>
+            <div class="original-image-card">
+                <img src="{{ comparison.image.url }}" alt="Original X-ray">
+            </div>
+        </div>
+
+        <!-- Model Comparison Grid -->
+        <div class="comparison-grid">
+            <!-- Custom CNN Results -->
+            <div class="model-result-card">
+                <div class="model-result-header">
+                    <i class="fas fa-microchip"></i>
+                    <h3>{{ model_info.custom_cnn.name }}</h3>
+                    <span class="accuracy-badge">{{ model_info.custom_cnn.accuracy }}% Accuracy</span>
+                </div>
+
+                <div class="prediction-box">
+                    <div class="prediction-label">
+                        <span class="label">Prediction:</span>
+                        <span class="value prediction-{{ comparison.cnn_prediction }}">
+                            {{ comparison.cnn_prediction|title }}
+                        </span>
+                    </div>
+                    <div class="confidence-display">
+                        <span class="label">Confidence:</span>
+                        <span class="value">{{ comparison.cnn_confidence|floatformat:2 }}%</span>
+                    </div>
+                    <div class="confidence-bar-small">
+                        <div class="confidence-fill" style="width: {{ comparison.cnn_confidence }}%"></div>
+                    </div>
+                </div>
+
+                <div class="gradcam-display">
+                    <h4>Grad-CAM Visualization</h4>
+                    {% if comparison.cnn_gradcam %}
+                    <img src="{{ comparison.cnn_gradcam.url }}" alt="Custom CNN Grad-CAM">
+                    {% else %}
+                    <div class="no-gradcam">
+                        <i class="fas fa-image"></i>
+                        <p>Not available</p>
+                    </div>
+                    {% endif %}
+                    <p class="gradcam-caption">Areas that influenced Custom CNN's decision</p>
+                </div>
+            </div>
+
+            <!-- ResNet-50 Results -->
+            <div class="model-result-card">
+                <div class="model-result-header">
+                    <i class="fas fa-network-wired"></i>
+                    <h3>{{ model_info.resnet50.name }}</h3>
+                    <span class="accuracy-badge">{{ model_info.resnet50.accuracy }}% Accuracy</span>
+                </div>
+
+                <div class="prediction-box">
+                    <div class="prediction-label">
+                        <span class="label">Prediction:</span>
+                        <span class="value prediction-{{ comparison.resnet_prediction }}">
+                            {{ comparison.resnet_prediction|title }}
+                        </span>
+                    </div>
+                    <div class="confidence-display">
+                        <span class="label">Confidence:</span>
+                        <span class="value">{{ comparison.resnet_confidence|floatformat:2 }}%</span>
+                    </div>
+                    <div class="confidence-bar-small">
+                        <div class="confidence-fill" style="width: {{ comparison.resnet_confidence }}%"></div>
+                    </div>
+                </div>
+
+                <div class="gradcam-display">
+                    <h4>Grad-CAM Visualization</h4>
+                    {% if comparison.resnet_gradcam %}
+                    <img src="{{ comparison.resnet_gradcam.url }}" alt="ResNet-50 Grad-CAM">
+                    {% else %}
+                    <div class="no-gradcam">
+                        <i class="fas fa-image"></i>
+                        <p>Not available</p>
+                    </div>
+                    {% endif %}
+                    <p class="gradcam-caption">Areas that influenced ResNet-50's decision</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Summary -->
+        <div class="analysis-summary">
+            <h3><i class="fas fa-clipboard-list"></i> Comparison Analysis</h3>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <i class="fas fa-{% if models_agree %}thumbs-up{% else %}exchange-alt{% endif %}"></i>
+                    <h4>Agreement</h4>
+                    <p>
+                        {% if models_agree %}
+                        Both models agree on the prediction, which increases confidence in the result.
+                        {% else %}
+                        Models produced different predictions. This may indicate a challenging case requiring expert review.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="summary-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h4>Confidence Difference</h4>
+                    <p>
+                        {% widthratio comparison.cnn_confidence 1 1 as cnn_conf %}
+                        {% widthratio comparison.resnet_confidence 1 1 as resnet_conf %}
+                        {% if cnn_conf > resnet_conf %}
+                        Custom CNN: {{ comparison.cnn_confidence|floatformat:1 }}%<br>
+                        ResNet-50: {{ comparison.resnet_confidence|floatformat:1 }}%<br>
+                        Custom CNN showed higher confidence.
+                        {% else %}
+                        ResNet-50: {{ comparison.resnet_confidence|floatformat:1 }}%<br>
+                        Custom CNN: {{ comparison.cnn_confidence|floatformat:1 }}%<br>
+                        ResNet-50 showed higher confidence.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="summary-card">
+                    <i class="fas fa-clock"></i>
+                    <h4>Processing Time</h4>
+                    <p>
+                        Total time to run both models: {{ comparison.total_processing_time|floatformat:2 }} seconds
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Disclaimer -->
+        <div class="disclaimer-card">
+            <i class="fas fa-shield-alt"></i>
+            <div>
+                <h3>Medical Disclaimer</h3>
+                <p><strong>This comparison is for educational purposes only.</strong> Neither model should be used for actual medical diagnosis. Always consult qualified healthcare professionals for medical advice.</p>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-buttons">
+            <a href="{% url 'detector:compare' %}" class="btn btn-primary">
+                <i class="fas fa-redo"></i> Compare Another Image
+            </a>
+            <a href="{% url 'detector:select_model' %}" class="btn btn-secondary">
+                <i class="fas fa-brain"></i> Single Model Analysis
+            </a>
+            <a href="{% url 'detector:home' %}" class="btn btn-outline">
+                <i class="fas fa-home"></i> Home
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <h3>Running Both Models...</h3>
+        <p>This may take a few moments</p>
+        <div class="model-status">
+            <div class="status-item">
+                <i class="fas fa-microchip"></i> Custom CNN
+            </div>
+            <div class="status-item">
+                <i class="fas fa-network-wired"></i> ResNet-50
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.model-result-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.model-result-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.model-result-header i {
+    font-size: 2rem;
+    color: #2196F3;
+}
+
+.model-result-header h3 {
+    margin: 0;
+    flex: 1;
+}
+
+.accuracy-badge {
+    background: #4CAF50;
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.prediction-box {
+    padding: 1.5rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.prediction-label, .confidence-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+
+.prediction-label .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.prediction-normal {
+    color: #4CAF50;
+}
+
+.prediction-pneumonia {
+    color: #FF9800;
+}
+
+.confidence-bar-small {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.confidence-bar-small .confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2196F3, #1976D2);
+    transition: width 1s ease;
+}
+
+.gradcam-display {
+    text-align: center;
+}
+
+.gradcam-display h4 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.gradcam-display img {
+    width: 100%;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+}
+
+.gradcam-caption {
+    margin-top: 0.5rem;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.agreement-banner {
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.agreement-banner.success {
+    background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+    border-left: 5px solid #4CAF50;
+}
+
+.agreement-banner.warning {
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    border-left: 5px solid #FF9800;
+}
+
+.agreement-banner i {
+    font-size: 2.5rem;
+}
+
+.agreement-banner.success i {
+    color: #4CAF50;
+}
+
+.agreement-banner.warning i {
+    color: #FF9800;
+}
+
+.original-image-section {
+    margin: 2rem 0;
+}
+
+.original-image-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.original-image-card img {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 8px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.summary-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    text-align: center;
+}
+
+.summary-card i {
+    font-size: 2.5rem;
+    color: #2196F3;
+    margin-bottom: 1rem;
+}
+
+.summary-card h4 {
+    margin-bottom: 0.8rem;
+    color: #333;
+}
+
+.summary-card p {
+    color: #666;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.comparison-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.feature-item i {
+    font-size: 1.8rem;
+    color: #2196F3;
+}
+
+.feature-item strong {
+    display: block;
+    color: #333;
+    margin-bottom: 0.3rem;
+}
+
+.feature-item p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.model-status {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+}
+</style>
+
+<script>
+const imageInput = document.getElementById('imageInput');
+const imagePreview = document.getElementById('imagePreview');
+const previewImg = document.getElementById('previewImg');
+const submitBtn = document.getElementById('submitBtn');
+const uploadArea = document.getElementById('uploadArea');
+const removeImage = document.getElementById('removeImage');
+const compareForm = document.getElementById('compareForm');
+const loadingOverlay = document.getElementById('loadingOverlay');
+
+if (imageInput) {
+    imageInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+                uploadArea.style.display = 'none';
+                submitBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    removeImage.addEventListener('click', function() {
+        imageInput.value = '';
+        imagePreview.style.display = 'none';
+        uploadArea.style.display = 'block';
+        submitBtn.disabled = true;
+    });
+
+    compareForm.addEventListener('submit', function() {
+        loadingOverlay.classList.add('active');
+    });
+}
+</script>
+{% endblock %}

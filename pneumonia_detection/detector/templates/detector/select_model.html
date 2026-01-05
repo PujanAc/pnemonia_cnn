@@ -1,0 +1,302 @@
+{% extends 'detector/base.html' %}
+
+{% block title %}Select Model - Pneumonia AI Detection{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-brain"></i> Select AI Model</h1>
+        <p>Choose which deep learning model to use for pneumonia detection</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="selection-wrapper">
+        <form method="post" class="model-selection-form">
+            {% csrf_token %}
+            
+            <div class="model-options">
+                <!-- Custom CNN Option -->
+                <div class="model-option">
+                    <input type="radio" name="model" id="custom_cnn" value="custom_cnn" checked>
+                    <label for="custom_cnn">
+                        <div class="option-card">
+                            <div class="option-header">
+                                <i class="fas fa-microchip"></i>
+                                <h3>Custom CNN</h3>
+                            </div>
+                            <div class="option-body">
+                                <p class="option-description">
+                                    {{ model_info.custom_cnn.description }}
+                                </p>
+                                <div class="option-stats">
+                                    <div class="stat-item">
+                                        <i class="fas fa-chart-line"></i>
+                                        <div>
+                                            <span class="stat-label">Accuracy</span>
+                                            <span class="stat-value">{{ model_info.custom_cnn.accuracy }}%</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <i class="fas fa-bolt"></i>
+                                        <div>
+                                            <span class="stat-label">Processing</span>
+                                            <span class="stat-value">~0.5s</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="option-features">
+                                    <h4>Features:</h4>
+                                    <ul>
+                                        <li><i class="fas fa-check"></i> Lightweight architecture</li>
+                                        <li><i class="fas fa-check"></i> Fast inference time</li>
+                                        <li><i class="fas fa-check"></i> Custom-trained for pneumonia</li>
+                                        <li><i class="fas fa-check"></i> Good for quick screening</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="option-footer">
+                                <span class="badge badge-success">Fast</span>
+                                <span class="badge badge-info">Efficient</span>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- ResNet-50 Option -->
+                <div class="model-option">
+                    <input type="radio" name="model" id="resnet50" value="resnet50">
+                    <label for="resnet50">
+                        <div class="option-card">
+                            <div class="recommended-badge">
+                                <i class="fas fa-star"></i> Recommended
+                            </div>
+                            <div class="option-header">
+                                <i class="fas fa-network-wired"></i>
+                                <h3>ResNet-50</h3>
+                            </div>
+                            <div class="option-body">
+                                <p class="option-description">
+                                    {{ model_info.resnet50.description }}
+                                </p>
+                                <div class="option-stats">
+                                    <div class="stat-item">
+                                        <i class="fas fa-chart-line"></i>
+                                        <div>
+                                            <span class="stat-label">Accuracy</span>
+                                            <span class="stat-value">{{ model_info.resnet50.accuracy }}%</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <i class="fas fa-clock"></i>
+                                        <div>
+                                            <span class="stat-label">Processing</span>
+                                            <span class="stat-value">~1.2s</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="option-features">
+                                    <h4>Features:</h4>
+                                    <ul>
+                                        <li><i class="fas fa-check"></i> State-of-the-art architecture</li>
+                                        <li><i class="fas fa-check"></i> Pre-trained on ImageNet</li>
+                                        <li><i class="fas fa-check"></i> Fine-tuned for medical imaging</li>
+                                        <li><i class="fas fa-check"></i> Highest accuracy</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="option-footer">
+                                <span class="badge badge-primary">High Accuracy</span>
+                                <span class="badge badge-warning">Deep Network</span>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large">
+                    <i class="fas fa-arrow-right"></i> Continue to Upload
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Comparison Info -->
+    <div class="comparison-cta">
+        <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <h4>Not sure which model to choose?</h4>
+                <p>You can use our comparison mode to run both models on the same image and see the differences.</p>
+                <a href="{% url 'detector:compare' %}" class="btn btn-secondary">
+                    <i class="fas fa-balance-scale"></i> Try Comparison Mode
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.model-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.model-option input[type="radio"] {
+    display: none;
+}
+
+.model-option label {
+    cursor: pointer;
+    display: block;
+}
+
+.option-card {
+    background: white;
+    border: 3px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    height: 100%;
+    position: relative;
+}
+
+.model-option input[type="radio"]:checked + label .option-card {
+    border-color: #2196F3;
+    box-shadow: 0 8px 24px rgba(33, 150, 243, 0.3);
+    transform: translateY(-5px);
+}
+
+.recommended-badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
+}
+
+.option-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.option-header i {
+    font-size: 2.5rem;
+    color: #2196F3;
+}
+
+.option-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.option-description {
+    color: #666;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.option-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.stat-item i {
+    font-size: 1.5rem;
+    color: #2196F3;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.stat-value {
+    display: block;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.option-features h4 {
+    margin-bottom: 0.8rem;
+    color: #333;
+}
+
+.option-features ul {
+    list-style: none;
+    padding: 0;
+}
+
+.option-features li {
+    padding: 0.4rem 0;
+    color: #666;
+}
+
+.option-features li i {
+    color: #4CAF50;
+    margin-right: 0.5rem;
+}
+
+.option-footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.comparison-cta {
+    margin: 3rem 0;
+}
+
+.info-box {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    background: #E3F2FD;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid #2196F3;
+}
+
+.info-box i {
+    font-size: 2rem;
+    color: #2196F3;
+    flex-shrink: 0;
+}
+
+.info-box h4 {
+    margin: 0 0 0.5rem 0;
+    color: #1976D2;
+}
+
+.info-box p {
+    margin: 0 0 1rem 0;
+    color: #555;
+}
+</style>
+{% endblock %}

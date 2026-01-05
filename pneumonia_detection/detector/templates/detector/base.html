@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pneumonia AI Detection{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-lungs"></i>
+                <span>Pneumonia AI Detection</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="{% url 'detector:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>
+                    <i class="fas fa-home"></i> Home
+                </a></li>
+                <li><a href="{% url 'detector:select_model' %}" {% if request.resolver_match.url_name == 'select_model' %}class="active"{% endif %}>
+                    <i class="fas fa-brain"></i> Detect
+                </a></li>
+                <li><a href="{% url 'detector:compare' %}" {% if request.resolver_match.url_name == 'compare' %}class="active"{% endif %}>
+                    <i class="fas fa-balance-scale"></i> Compare
+                </a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+            {{ message }}
+            <button class="close-btn" onclick="this.parentElement.remove()">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4><i class="fas fa-shield-alt"></i> Medical Disclaimer</h4>
+                    <p>This AI system is for educational and research purposes only. It is NOT a substitute for professional medical diagnosis. Always consult qualified healthcare providers.</p>
+                </div>
+                <div class="footer-section">
+                    <h4><i class="fas fa-info-circle"></i> About</h4>
+                    <p>Explainable AI system using Deep Learning for pneumonia detection from chest X-ray images.</p>
+                    <p class="tech-stack">
+                        <span class="badge">Django</span>
+                        <span class="badge">TensorFlow</span>
+                        <span class="badge">Grad-CAM</span>
+                        <span class="badge">CNN</span>
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <h4><i class="fas fa-database"></i> Models</h4>
+                    <ul>
+                        <li><strong>Custom CNN:</strong> 92.5% Accuracy</li>
+                        <li><strong>ResNet-50:</strong> 95.8% Accuracy</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Pneumonia AI Detection System | Educational Project</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.animation = 'slideOut 0.5s ease';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

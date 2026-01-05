@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+
+# Virtual environment
+venv/
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# ML / TensorFlow
+
+*.keras
+*.ckpt
+logs/
+datasets/
+data/
+
+# OS
+.DS_Store
+Thumbs.db

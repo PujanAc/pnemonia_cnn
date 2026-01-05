@@ -1,0 +1,452 @@
+{% extends 'detector/base.html' %}
+
+{% block title %}Results - Pneumonia AI Detection{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-clipboard-check"></i> Analysis Results</h1>
+        <p>AI-powered pneumonia detection with explainability</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="results-wrapper">
+        <!-- Main Result Card -->
+        <div class="result-card">
+            <div class="result-header">
+                <div class="result-icon {% if prediction.predicted_class == 'pneumonia' %}warning{% else %}success{% endif %}">
+                    <i class="fas fa-{% if prediction.predicted_class == 'pneumonia' %}exclamation-triangle{% else %}check-circle{% endif %}"></i>
+                </div>
+                <div class="result-title">
+                    <h2>Prediction: <span class="prediction-class">{{ prediction.predicted_class|title }}</span></h2>
+                    <p class="prediction-subtitle">
+                        Analysis completed using {{ model_info.name }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="confidence-meter">
+                <div class="confidence-label">
+                    <span>Confidence Score</span>
+                    <span class="confidence-value">{{ prediction.confidence|floatformat:2 }}%</span>
+                </div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill confidence-{{ confidence_color }}" 
+                         style="width: {{ prediction.confidence }}%">
+                    </div>
+                </div>
+                <div class="confidence-description">
+                    {% if prediction.confidence >= 90 %}
+                        <i class="fas fa-info-circle"></i> High confidence prediction
+                    {% elif prediction.confidence >= 70 %}
+                        <i class="fas fa-info-circle"></i> Moderate confidence prediction
+                    {% else %}
+                        <i class="fas fa-exclamation-circle"></i> Lower confidence - consider additional analysis
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="result-metadata">
+                <div class="metadata-item">
+                    <i class="fas fa-brain"></i>
+                    <div>
+                        <strong>Model Used</strong>
+                        <span>{{ model_info.name }}</span>
+                    </div>
+                </div>
+                <div class="metadata-item">
+                    <i class="fas fa-chart-line"></i>
+                    <div>
+                        <strong>Model Accuracy</strong>
+                        <span>{{ model_info.accuracy }}%</span>
+                    </div>
+                </div>
+                <div class="metadata-item">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <strong>Processing Time</strong>
+                        <span>{{ prediction.processing_time|floatformat:2 }}s</span>
+                    </div>
+                </div>
+                <div class="metadata-item">
+                    <i class="fas fa-calendar"></i>
+                    <div>
+                        <strong>Date</strong>
+                        <span>{{ prediction.created_at|date:"M d, Y H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Images Comparison -->
+        <div class="images-section">
+            <h3><i class="fas fa-images"></i> Visual Analysis</h3>
+            
+            <div class="images-grid">
+                <!-- Original Image -->
+                <div class="image-card">
+                    <div class="image-card-header">
+                        <i class="fas fa-x-ray"></i>
+                        <h4>Original X-ray</h4>
+                    </div>
+                    <div class="image-container">
+                        <img src="{{ prediction.image.url }}" alt="Original X-ray">
+                    </div>
+                    <p class="image-caption">Input chest X-ray image</p>
+                </div>
+
+                <!-- Grad-CAM Visualization -->
+                <div class="image-card">
+                    <div class="image-card-header">
+                        <i class="fas fa-fire"></i>
+                        <h4>Grad-CAM Heatmap</h4>
+                    </div>
+                    <div class="image-container">
+                        {% if prediction.gradcam_image %}
+                        <img src="{{ prediction.gradcam_image.url }}" alt="Grad-CAM Visualization">
+                        {% else %}
+                        <div class="no-image">
+                            <i class="fas fa-image"></i>
+                            <p>Grad-CAM not available</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <p class="image-caption">AI attention visualization (warmer colors = higher attention)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explainability Section -->
+        <div class="explainability-section">
+            <h3><i class="fas fa-lightbulb"></i> Understanding the Results</h3>
+            
+            <div class="explanation-cards">
+                <div class="explanation-card">
+                    <div class="explanation-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="explanation-content">
+                        <h4>What is Grad-CAM?</h4>
+                        <p>Gradient-weighted Class Activation Mapping (Grad-CAM) shows which regions of the X-ray image were most important for the AI's decision. Warmer colors (red/yellow) indicate areas that strongly influenced the prediction.</p>
+                    </div>
+                </div>
+
+                <div class="explanation-card">
+                    <div class="explanation-icon">
+                        <i class="fas fa-{% if prediction.predicted_class == 'pneumonia' %}lungs{% else %}heart{% endif %}"></i>
+                    </div>
+                    <div class="explanation-content">
+                        <h4>Clinical Interpretation</h4>
+                        {% if prediction.predicted_class == 'pneumonia' %}
+                        <p>The AI detected patterns consistent with pneumonia. The Grad-CAM highlights regions showing potential opacity, infiltration, or consolidation typical of pneumonic infection.</p>
+                        {% else %}
+                        <p>The AI did not detect significant patterns associated with pneumonia. The lungs appear relatively clear with normal radiographic characteristics.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="explanation-card">
+                    <div class="explanation-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="explanation-content">
+                        <h4>Confidence Level</h4>
+                        <p>
+                            {% if prediction.confidence >= 90 %}
+                            The model shows high confidence ({{ prediction.confidence|floatformat:1 }}%) in this prediction, indicating strong pattern recognition.
+                            {% elif prediction.confidence >= 70 %}
+                            The model shows moderate confidence ({{ prediction.confidence|floatformat:1 }}%). Consider correlating with clinical symptoms.
+                            {% else %}
+                            The model shows lower confidence ({{ prediction.confidence|floatformat:1 }}%). Additional diagnostic tests may be helpful.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Disclaimer -->
+        <div class="disclaimer-card">
+            <div class="disclaimer-header">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Important Medical Disclaimer</h3>
+            </div>
+            <div class="disclaimer-content">
+                <p><strong>This AI system is for educational and research purposes only.</strong></p>
+                <ul>
+                    <li>This is NOT a medical diagnosis and should NOT be used for clinical decision-making</li>
+                    <li>AI predictions may contain errors and should be verified by qualified healthcare professionals</li>
+                    <li>Always consult with licensed physicians for medical advice and diagnosis</li>
+                    <li>Do not delay seeking professional medical care based on these results</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="{% url 'detector:select_model' %}" class="btn btn-primary">
+                <i class="fas fa-redo"></i> Analyze Another Image
+            </a>
+            <a href="{% url 'detector:compare' %}" class="btn btn-secondary">
+                <i class="fas fa-balance-scale"></i> Compare Models
+            </a>
+            <a href="{% url 'detector:home' %}" class="btn btn-outline">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.results-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.result-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.result-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+}
+
+.result-icon.success {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.result-icon.warning {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+    color: white;
+}
+
+.result-title h2 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.prediction-class {
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.prediction-subtitle {
+    color: #666;
+    margin: 0.5rem 0 0 0;
+}
+
+.confidence-meter {
+    margin: 2rem 0;
+}
+
+.confidence-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.confidence-value {
+    font-size: 1.5rem;
+    color: #2196F3;
+}
+
+.confidence-bar {
+    height: 30px;
+    background: #e0e0e0;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.confidence-fill {
+    height: 100%;
+    transition: width 1s ease;
+    border-radius: 15px;
+}
+
+.confidence-success {
+    background: linear-gradient(90deg, #4CAF50, #45a049);
+}
+
+.confidence-warning {
+    background: linear-gradient(90deg, #FF9800, #F57C00);
+}
+
+.confidence-danger {
+    background: linear-gradient(90deg, #f44336, #d32f2f);
+}
+
+.confidence-description {
+    margin-top: 0.5rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.result-metadata {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.metadata-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.metadata-item i {
+    font-size: 1.5rem;
+    color: #2196F3;
+}
+
+.metadata-item strong {
+    display: block;
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.metadata-item span {
+    display: block;
+    color: #333;
+    font-weight: 600;
+}
+
+.images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.image-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.image-card-header {
+    padding: 1rem;
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.image-container {
+    padding: 1rem;
+    background: #f5f5f5;
+}
+
+.image-container img {
+    width: 100%;
+    border-radius: 8px;
+}
+
+.image-caption {
+    padding: 1rem;
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.explanation-cards {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.explanation-card {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.explanation-icon {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.8rem;
+}
+
+.explanation-content h4 {
+    margin: 0 0 0.8rem 0;
+    color: #333;
+}
+
+.explanation-content p {
+    margin: 0;
+    color: #666;
+    line-height: 1.6;
+}
+
+.disclaimer-card {
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    border-radius: 12px;
+    padding: 2rem;
+    border-left: 5px solid #FF9800;
+}
+
+.disclaimer-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.disclaimer-header i {
+    font-size: 2rem;
+    color: #F57C00;
+}
+
+.disclaimer-content ul {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.disclaimer-content li {
+    margin: 0.5rem 0;
+    color: #555;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 2rem 0;
+}
+</style>
+{% endblock %}
